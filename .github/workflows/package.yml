@@ -1,0 +1,40 @@
+name: package
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+  workflow_run:
+    workflows:
+      - sync fork
+
+    types:
+      - completed
+
+  workflow_dispatch:
+
+env:
+  GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install dependencies
+        run: |
+          sudo apt-get install -yq pandoc &>/dev/null && echo -e "##[group]Install pandoc\\n[command]pandoc --version\\n$( pandoc --version )\\n##[endgroup]"
+
+      # hack the release script to still do the release even on push
+      - name: release
+        run: |
+          wget https://raw.githubusercontent.com/BigWigsMods/packager/7cd7fe5fede4ca80f63742e6bc1d777914814380/release.sh -qO $HOME/release
+          sed -i '/$GITHUB_EVENT_NAME == "push" && $GITHUB_REF == "refs\/heads"*/c\\tif false; then' $HOME/release
+          chmod u+x $HOME/release
+          git tag $(git show -s --format=%ct)
+
+          $HOME/release
