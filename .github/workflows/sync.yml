@@ -1,0 +1,37 @@
+name: sync fork
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+
+  workflow_dispatch:
+
+env:
+  UPSTREAM: shadowed/shadowedunitframes
+  MASTER: master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout upstream
+        uses: actions/checkout@v3
+        with: 
+          repository: ${{ env.UPSTREAM }}
+          path: upstream
+
+      - name: checkout fork
+        uses: actions/checkout@v3
+        with: 
+          path: fork
+
+      - name: sync fork
+        working-directory: fork
+        run: |
+          git remote add upstream $PWD/../upstream
+
+          git fetch --unshallow origin
+          git pull --rebase upstream master --tags
+
+          git push -f origin --tags
