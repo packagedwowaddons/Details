@@ -1,0 +1,37 @@
+name: sync fork
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with: 
+          fetch-depth: 0
+
+      - name: git config
+        run: |
+          git config user.name "Nathan Perry"
+          git config user.email "np@nathanperry.dev"
+
+      - name: pull branch
+        run: |
+          git remote add upstream $(jq -r .repo < .upstream )
+          git pull --rebase upstream $(jq -r .master < .upstream)
+
+      - name: push branch
+        run: |
+          git push -f origin $(jq -r .master < .upstream)
+          git push -f origin upstream/$(jq -r .master < .upstream):refs/heads/upstream
+
+      - name: mirror tags
+        run: |
+          git fetch upstream --tags
+          git push -f origin --tags
