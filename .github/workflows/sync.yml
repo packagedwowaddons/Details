@@ -23,13 +23,13 @@ jobs:
 
       - name: pull branch
         run: |
-          git remote add upstream $(jq -r .repo < .upstream )
-          git pull --rebase upstream $(jq -r .master < .upstream)
+          git remote add upstream $(jq -r .upstream < .upstream )
+          git pull --rebase upstream $(jq -r .branch < .upstream)
 
       - name: push branch
         run: |
-          git push -f origin $(jq -r .master < .upstream)
-          git push -f origin upstream/$(jq -r .master < .upstream):refs/heads/upstream
+          git push -f origin $(jq -r .branch < .upstream)
+          git push -f origin upstream/$(jq -r .branch < .upstream):refs/heads/upstream
 
       - name: mirror tags
         run: |
