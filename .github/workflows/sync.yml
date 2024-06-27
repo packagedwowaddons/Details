@@ -24,7 +24,9 @@ jobs:
       - name: pull branch
         run: |
           git remote add upstream $(jq -r .upstream < .upstream )
-          git pull --rebase upstream $(jq -r .branch < .upstream)
+          readonly branch=$(jq -r .branch < .upstream)
+          git fetch upstream "$branch"
+          git rebase -Xtheirs upstream/"$branch"
 
       - name: push branch
         run: |
